@@ -33,7 +33,6 @@
 (defn init []
   (let [schema nil
         conn (get-connection)]
-    (swap! db-state assoc :conn conn)
     ;;(<!! (client/transact conn {:tx-data schema}))
 
     (info "db initialized")
