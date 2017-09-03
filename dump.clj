@@ -4,7 +4,8 @@
 ;; https://github.com/Day8/re-frame-http-fx
 ;; https://keechma.com/guides/
 ;; https://github.com/yogthos/yuggoth/blob/master/src-cljs/yuggoth/components/login.cljs
-
+;; https://github.com/coyotespike/holygrailreagent/blob/master/src/clj/holy_grail/handler.clj
+;; https://github.com/danielsz/system-websockets
 
 
 ;;

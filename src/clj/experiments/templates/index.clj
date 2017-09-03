@@ -3,7 +3,7 @@
 
 
 
-(defn index []
+(defn index-page []
   (html5
    {:lang "en"}
    [:head
@@ -13,4 +13,27 @@
      [:div#app]]
     (include-js "experiments.js")
     [:script "experiments.core.init();"]]))
+
+
+
+
+(defn login-page []
+  (html5
+   {:lang "en"}
+   [:head
+    [:title "Experiments"]]
+   [:body
+    [:form {:method :post}
+   
+     [:input {:type :text
+              :placeholder "Username:"
+              :name "username"}]
+   
+     [:input {:type :password
+              :placeholder "Password:"
+              :name "password"}]
+
+     [:input {:type :submit
+              :value "Submit"}]]]))
+
 
