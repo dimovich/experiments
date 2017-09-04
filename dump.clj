@@ -6,6 +6,7 @@
 ;; https://github.com/yogthos/yuggoth/blob/master/src-cljs/yuggoth/components/login.cljs
 ;; https://github.com/coyotespike/holygrailreagent/blob/master/src/clj/holy_grail/handler.clj
 ;; https://github.com/danielsz/system-websockets
+;; https://gist.github.com/Deraen/ef7f65d7ec26f048e2bb
 
 
 ;;

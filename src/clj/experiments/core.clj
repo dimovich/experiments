@@ -7,7 +7,6 @@
             
             [compojure.core     :refer [defroutes GET POST PUT]]
             [compojure.route    :refer [files resources]]
-            [compojure.handler  :refer [site]]
             [compojure.response :refer [render]]
             
             [org.httpkit.server :as server]
@@ -37,11 +36,16 @@
 
 (defonce state (atom nil))
 
+(defn ok [d]          {:status 200 :body d})
+(defn bad-request [d] {:status 400 :body d})
+
 
 (defn index [request]
-  (if-not (authenticated? request)
-    (throw-unauthorized)
-    (render (index-page) request)))
+  (info request)
+  (render (index-page) request)
+  #_(if-not (authenticated? request)
+      (throw-unauthorized)
+      ))
 
 
 (defn login [request]
@@ -49,36 +53,44 @@
 
 
 (defn logout [request]
-  (-> (redirect "/login")
+  (-> (ok {:status :logged-out}) ;;(redirect "/login")
       (assoc :session {})))
 
 
 (def authdata
-  {:admin "secret"
-   :user  "secret"})
-
-
+  {:admin "sec"
+   :user  "sec"})
 
 
 (defn login-authenticate [request]
-  (let [username (get-in request [:form-params "username"])
-        password (get-in request [:form-params "password"])
+  (info request)
+  (let [username (get-in request [:params :user])
+        password (get-in request [:params :pass])
         session (:session request)
         found-password (get authdata (keyword username))]
+    
     (if (and found-password (= found-password password))
+      
       (let [next-url (get-in request [:query-params :next] "/")
             updated-session (assoc session :identity (keyword username))]
-        (-> (redirect next-url)
+        
+        (-> (ok {:user username})
             (assoc :session updated-session)))
+      
       (render (login-page) request))))
 
 
+(defn save-cover [request]
+  (if (authenticated? request)
+    (ok {:saved :cover})
+    (bad-request {:could :not})))
 
 
 (defroutes handler
   (GET       "/"       [] index)
   (GET       "/login"  [] login)
   (POST      "/login"  [] login-authenticate)
+  (POST      "/save-cover" [] save-cover)
   (GET       "/logout" [] logout)
   (files     "/" {:root "."})   ;; to serve static resources
   (resources "/" {:root "."})   ;; to serve anything else
@@ -87,14 +99,17 @@
 
 
 
+
+
+
 (defn unauthorized-handler [request metadata]
   (let [current-url (:uri request)]
-    (redirect (format "/login?next=%s" current-url)))
-  #_(cond
-      (authenticated? request) (-> (render "Authorization Error" request)
-                                   (assoc :status 403))
-    
-      :else ))
+    (cond
+      (authenticated? request)
+      (-> (render "Authorization Error" request)
+          (assoc :status 403))
+      
+      :else (redirect (format "/login?next=%s" current-url)))))
 
 
 
@@ -108,13 +123,13 @@
   (as-> handler $
     (wrap-authorization  $ auth-backend)
     (wrap-authentication $ auth-backend)
-    (wrap-restful-format $)
     (wrap-params $)
     (wrap-session $)
+    (wrap-restful-format $)
     (wrap-resource       $ "public")
-    ;;(wrap-content-type   $)
-    ;;(wrap-not-modified   $)
-    (site $)))
+    ;; (wrap-content-type   $)
+    ;; (wrap-not-modified   $)
+    ))
 
 
 
