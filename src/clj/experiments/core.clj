@@ -4,24 +4,26 @@
             [ring.middleware.not-modified    :refer [wrap-not-modified]]
             [ring.middleware.format          :refer [wrap-restful-format]]
             [ring.util.response              :refer [response file-response redirect not-found content-type]]
+            [ring.middleware.session         :refer [wrap-session]]
+            [ring.middleware.params          :refer [wrap-params]]
             
             [compojure.core     :refer [defroutes GET POST PUT]]
             [compojure.route    :refer [files resources]]
             [compojure.response :refer [render]]
-            
+
+            [clj-time.core      :as time]
             [org.httpkit.server :as server]
             [taoensso.timbre    :as timbre :refer [info]]
             [clojure.pprint     :refer [pprint]]
             [clojure.set        :refer [rename-keys]]
-            [clojure.data.fressian           :as fress]
-
+            [clojure.data.fressian  :as fress]
             [clojure.java.io    :as io]
 
-            [ring.middleware.session :refer [wrap-session]]
-            [ring.middleware.params  :refer [wrap-params]]
-
-            [buddy.auth :refer [authenticated? throw-unauthorized]]
-            [buddy.auth.backends.session :refer [session-backend]]
+            [buddy.core.nonce :as nonce]
+            [buddy.sign.jwt :as jwt]
+            [buddy.hashers  :as hashers]
+            [buddy.auth     :refer [authenticated? throw-unauthorized]]
+            [buddy.auth.backends.token :refer [jws-backend]]
             [buddy.auth.middleware :refer [wrap-authentication wrap-authorization]]
             
             [experiments.db.core]
@@ -40,81 +42,58 @@
 (defn bad-request [d] {:status 400 :body d})
 
 
+(def secret "mysupersecret")
+
+
 (defn index [request]
-  (info request)
-  (render (index-page) request)
-  #_(if-not (authenticated? request)
-      (throw-unauthorized)
-      ))
-
-
-(defn login [request]
-  (render (login-page) request))
-
-
-(defn logout [request]
-  (-> (ok {:status :logged-out}) ;;(redirect "/login")
-      (assoc :session {})))
+  (info "index" request)
+  
+  (if-not (authenticated? request)
+    (throw-unauthorized)
+    (ok {:status :logged
+         :message (str "hello" (:identity request))})))
 
 
 (def authdata
-  {:admin "sec"
-   :user  "sec"})
+  {:admin "secret"
+   :user  "secret"})
 
 
-(defn login-authenticate [request]
-  (info request)
-  (let [username (get-in request [:params :user])
-        password (get-in request [:params :pass])
-        session (:session request)
-        found-password (get authdata (keyword username))]
-    
-    (if (and found-password (= found-password password))
+
+
+(defn login [request]
+  (info "login" request)
+  (let [username (get-in request [:params :username])
+        password (get-in request [:params :password])
+        valid?   (some-> authdata
+                         (get (keyword username))
+                         (= password))]
+
+    (if valid?
+      (let [claims {:user (keyword username)
+                    :exp  (time/plus (time/now) (time/seconds 3600))}
+            token (jwt/sign claims secret {:alg :hs512})]
+        (ok {:token token}))
       
-      (let [next-url (get-in request [:query-params :next] "/")
-            updated-session (assoc session :identity (keyword username))]
-        
-        (-> (ok {:user username})
-            (assoc :session updated-session)))
-      
-      (render (login-page) request))))
+      (bad-request {:message "wrong auth data"}))))
 
 
-(defn save-cover [request]
-  (if (authenticated? request)
-    (ok {:saved :cover})
-    (bad-request {:could :not})))
+
 
 
 (defroutes handler
-  (GET       "/"       [] index)
-  (GET       "/login"  [] login)
-  (POST      "/login"  [] login-authenticate)
-  (POST      "/save-cover" [] save-cover)
-  (GET       "/logout" [] logout)
-  (files     "/" {:root "."})   ;; to serve static resources
-  (resources "/" {:root "."})   ;; to serve anything else
+  (GET       "/"       [] (index-page))
+  (GET       "/home"   [] index)
+  (POST      "/login"  [] login)
+  (files     "/"       {:root "."})   ;; to serve static resources
+  (resources "/"       {:root "."})   ;; to serve anything else
   (compojure.route/not-found "Page Not Found")) ;; page not found
 
 
 
 
-
-
-
-(defn unauthorized-handler [request metadata]
-  (let [current-url (:uri request)]
-    (cond
-      (authenticated? request)
-      (-> (render "Authorization Error" request)
-          (assoc :status 403))
-      
-      :else (redirect (format "/login?next=%s" current-url)))))
-
-
-
 (def auth-backend
-  (session-backend {:unauthorized-handler unauthorized-handler}))
+  (jws-backend {:secret secret :options {:alg :hs512}}))
 
 
 
@@ -123,9 +102,10 @@
   (as-> handler $
     (wrap-authorization  $ auth-backend)
     (wrap-authentication $ auth-backend)
-    (wrap-params $)
-    (wrap-session $)
-    (wrap-restful-format $)
+    ;;    (wrap-params $)
+    ;;    (wrap-session $)
+    (wrap-restful-format $ ;;{:formats [:transit-json]}
+                         )
     (wrap-resource       $ "public")
     ;; (wrap-content-type   $)
     ;; (wrap-not-modified   $)

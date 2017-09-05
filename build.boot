@@ -25,8 +25,11 @@
 
                  [buddy/buddy-auth "2.1.0"]
                  [buddy/buddy-hashers "1.3.0"]
+                 [buddy/buddy-sign "2.2.0"]
+                 [buddy/buddy-core "1.4.0"]
 
-
+                 [clj-time "0.14.0"]
+                 
                  [com.datomic/clj-client "0.8.606"]
                  [org.clojure/core.async "0.3.443"]
                  [org.clojure/data.fressian "0.2.1"]

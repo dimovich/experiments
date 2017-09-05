@@ -1,19 +1,38 @@
 (ns experiments.index.views
   (:require [reagent.core  :as r]
             [re-frame.core :refer [subscribe dispatch dispatch-sync]]
-            [ajax.core :refer [GET POST]]
+            [ajax.core :refer [GET POST default-interceptors to-interceptor
+                               transit-response-format transit-request-format]]
             [experiments.index.events :as evt]))
 
+
+
+(def token (atom nil))
+     
+(def token-interceptor
+     (to-interceptor {:name "Token Interceptor"
+                      :request #(assoc-in % [:session :token] @token)}))
+
+#_(swap! default-interceptors (partial cons token-interceptor))
 
 
 
 (defn login-handler [user pass]
   (POST "/login"
-        {:params {:user user
-                  :pass pass}
-         ;;:with-credentials true
-         :handler #(println %)
+        {:params {:username user
+                  :password pass}
+         :headers {"Accept" "application/transit+json"}
+         :handler #(do (println %)
+                       (reset! token (:token %)))
          :error-handler #(println %)}))
+
+
+(defn get-home []
+  (GET "/home"
+       {:headers {"Authorization" (str "Token " @token)
+                  "Accept" "application/transit+json"}
+        :handler #(println %)
+        :error-handler #(println %)}))
 
 
 (defn login-form []
@@ -32,6 +51,7 @@
                 :value "Submit"
                 :on-click #(login-handler (:user @state)
                                           (:pass @state))}]])))
+
 
 
 (defn index []

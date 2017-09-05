@@ -2,12 +2,8 @@
 ;; https://blog.knoldus.com/2014/03/19/password-recovery-in-clojure/
 ;; http://grishaev.me/en/datomic-query?utm_source=dlvr.it&utm_medium=twitter
 ;; https://github.com/Day8/re-frame-http-fx
-;; https://keechma.com/guides/
-;; https://github.com/yogthos/yuggoth/blob/master/src-cljs/yuggoth/components/login.cljs
-;; https://github.com/coyotespike/holygrailreagent/blob/master/src/clj/holy_grail/handler.clj
-;; https://github.com/danielsz/system-websockets
 ;; https://gist.github.com/Deraen/ef7f65d7ec26f048e2bb
-
+;; http://cryto.net/~joepie91/blog/2016/06/13/stop-using-jwt-for-sessions/
 
 ;;
 ;; bin/run -m datomic.peer-server -h localhost -p 8998 -a admin,admin -d hello,datomic:mem://hello

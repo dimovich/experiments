@@ -1,0 +1,8 @@
+- cljs-ajax interceptors to add token to requests
+  ! check web dev book how to add Authorization to interceptors
+
+- read about authorization from buddy-auth manual
+
+- nonce secret string
+
+- check memory-hole
