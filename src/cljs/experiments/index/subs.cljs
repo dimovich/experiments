@@ -1,14 +1,12 @@
 (ns experiments.index.subs
-  (:require [re-frame.core :refer [reg-sub]]))
+  (:require [re-frame.core :refer [reg-sub]]
+            [experiments.ajax.subs :as ajax-sub]))
 
 
-#_(reg-sub
-   ::index
-   (fn [db _]
-     (:index db)))
+(reg-sub
+ ::authenticated?
+ :<- [::ajax-sub/token]
+ (fn [token _]
+   (not (nil? token))))
 
-#_(reg-sub
-   ::panel-stack
-   :<- [::index]
-   (fn [db _]
-     (:panel-stack db)))
+

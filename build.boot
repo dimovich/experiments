@@ -37,6 +37,7 @@
                  [prismatic/dommy "1.1.0"]
                  [reagent  "0.8.0-alpha1"]
                  [re-frame "0.10.1"]
+                 [day8.re-frame/http-fx "0.1.4"]
                  [cljs-ajax "0.7.2"]])
 
 
