@@ -15,11 +15,10 @@
                 #(merge % {"Authorization" (str "Token " @token)})))
     request))
 
+
 (def token-interceptor
      (to-interceptor {:name "token interceptor"
                       :request inject-token}))
-
-(swap! default-interceptors conj token-interceptor)
 
 
 
@@ -38,6 +37,7 @@
        {:headers {;;"Authorization" (str "Token " @token)
                   "Accept" "application/transit+json"}
         :handler #(println %)
+        :interceptors [token-interceptor]
         :error-handler #(println %)}))
 
 
