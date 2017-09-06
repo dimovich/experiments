@@ -1,19 +1,25 @@
 (ns experiments.index.views
   (:require [reagent.core  :as r]
             [re-frame.core :refer [subscribe dispatch dispatch-sync]]
-            [ajax.core :refer [GET POST default-interceptors to-interceptor
-                               transit-response-format transit-request-format]]
+            [ajax.core :refer [GET POST default-interceptors to-interceptor]]
             [experiments.index.events :as evt]))
 
 
 
 (def token (atom nil))
-     
-(def token-interceptor
-     (to-interceptor {:name "Token Interceptor"
-                      :request #(assoc-in % [:session :token] @token)}))
 
-#_(swap! default-interceptors (partial cons token-interceptor))
+(defn inject-token [request]
+  (if @token
+    (-> request
+        (update :headers
+                #(merge % {"Authorization" (str "Token " @token)})))
+    request))
+
+(def token-interceptor
+     (to-interceptor {:name "token interceptor"
+                      :request inject-token}))
+
+(swap! default-interceptors conj token-interceptor)
 
 
 
@@ -29,7 +35,7 @@
 
 (defn get-home []
   (GET "/home"
-       {:headers {"Authorization" (str "Token " @token)
+       {:headers {;;"Authorization" (str "Token " @token)
                   "Accept" "application/transit+json"}
         :handler #(println %)
         :error-handler #(println %)}))

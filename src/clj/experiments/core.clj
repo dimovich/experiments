@@ -50,8 +50,7 @@
   
   (if-not (authenticated? request)
     (throw-unauthorized)
-    (ok {:status :logged
-         :message (str "hello" (:identity request))})))
+    (ok {:message (str "hello" (:identity request))})))
 
 
 (def authdata
@@ -104,7 +103,7 @@
     (wrap-authentication $ auth-backend)
     ;;    (wrap-params $)
     ;;    (wrap-session $)
-    (wrap-restful-format $ ;;{:formats [:transit-json]}
+    (wrap-restful-format $ {:formats [:transit-json]}
                          )
     (wrap-resource       $ "public")
     ;; (wrap-content-type   $)
