@@ -19,11 +19,11 @@
  ::login
  (fn
    [_ [_ {:keys [user pass]}]]
-   {::ajax-evt/ajax {:method          :post
-                     :params {:username user
-                              :password pass}
-                     :uri             "/login"
-                     :on-success      [::ajax-evt/set-token]}}))
+   {:dispatch [::ajax-evt/request {:method    :post
+                                   :params    {:username user
+                                               :password pass}
+                                   :uri        "/login"
+                                   :on-success [::ajax-evt/set-token]}]}))
 
 
 (reg-event-fx
@@ -31,7 +31,7 @@
  (fn
    [{db :db} _]
    {:db (dissoc db :authenticated?)
-    ::ajax-evt/remove-token nil}))
+    :dispatch [::ajax-evt/remove-token]}))
 
 
 
@@ -39,5 +39,5 @@
  ::get-home-page
  (fn
    [_ _]
-   {::ajax-evt/ajax-token {:uri "/home"}}))
+   {:dispatch [::ajax-evt/request-auth {:uri "/home"}]}))
 

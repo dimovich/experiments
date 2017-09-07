@@ -22,7 +22,7 @@
 
 
 (reg-event-fx
- ::ajax
+ ::request
  (fn
    [_ [_ m]]
    {:http-xhrio (-> {:method          :get
@@ -30,15 +30,17 @@
                      :on-failure      [::bad-response]
                      :format          (ajax/transit-request-format)
                      :response-format (ajax/transit-response-format)}
+                    
                     (merge m))}))
 
 
 (reg-event-fx
- ::ajax-token
+ ::request-auth
  (fn
    [_ [_ m]]
-   {::ajax (-> {:interceptors [token-ajax-interceptor]}
-               (merge m))}))
+   {:dispatch [::request (-> {:interceptors [token-ajax-interceptor]}
+                             
+                             (merge m))]}))
 
 
 (reg-event-db
@@ -46,8 +48,7 @@
   (fn
     [db [_ {:keys [token]}]]
     (info "login success: " token)
-    (-> db
-        (assoc :token token))))
+    (assoc db :token token)))
 
 
 (reg-event-db

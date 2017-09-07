@@ -92,13 +92,11 @@
 
 (defn unauthorized-handler
   [request metadata]
-  (info "here")
   (cond
-
     (authenticated? request)
     (-> (ok)
         (assoc :status 403))
-    ;; In other cases, redirect the user to login page.
+
     :else
     (bad-request {:message "unauthorized"})))
 
