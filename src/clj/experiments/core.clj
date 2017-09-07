@@ -11,7 +11,6 @@
             [compojure.route    :refer [files resources]]
             [compojure.response :refer [render]]
 
-            [clj-time.core      :as time]
             [org.httpkit.server :as server]
             [taoensso.timbre    :as timbre :refer [info]]
             [clojure.pprint     :refer [pprint]]
@@ -19,30 +18,23 @@
             [clojure.data.fressian  :as fress]
             [clojure.java.io    :as io]
 
-            [buddy.core.nonce :as nonce]
             [buddy.sign.jwt :as jwt]
-            [buddy.hashers  :as hashers]
             [buddy.auth     :refer [authenticated? throw-unauthorized]]
-            [buddy.auth.backends.token :refer [jws-backend]]
-            [buddy.auth.middleware :refer [wrap-authentication wrap-authorization]]
+            [buddy.auth.middleware :refer [wrap-authentication
+                                           wrap-authorization]]
             
             [experiments.db.core]
             [experiments.db.schema]
-            
-            [experiments.util]
 
-            [experiments.templates.index :refer [index-page login-page]])
+            [experiments.auth :refer [auth-backend login]]
+            [experiments.templates.index :refer [index-page login-page]]
+
+            [experiments.util :refer [ok bad-request]])
   
   (:gen-class))
 
 
 (defonce state (atom nil))
-
-(defn ok [d]          {:status 200 :body d})
-(defn bad-request [d] {:status 400 :body d})
-
-
-(def secret "mysupersecret")
 
 
 (defn index [request]
@@ -50,32 +42,7 @@
   
   (if-not (authenticated? request)
     (throw-unauthorized)
-    (ok {:message (str "hello" (:identity request))})))
-
-
-(def authdata
-  {:admin "secret"
-   :user  "secret"})
-
-
-
-
-(defn login [request]
-  (info "login" request)
-  (let [username (get-in request [:params :username])
-        password (get-in request [:params :password])
-        valid?   (some-> authdata
-                         (get (keyword username))
-                         (= password))]
-
-    (if valid?
-      (let [claims {:user (keyword username)
-                    :exp  (time/plus (time/now) (time/seconds 3600))}
-            token (jwt/sign claims secret {:alg :hs512})]
-        (ok {:token token}))
-      
-      (bad-request {:message "wrong auth data"}))))
-
+    (ok {:message (str "hello " (:identity request))})))
 
 
 
@@ -90,44 +57,18 @@
 
 
 
-(defn unauthorized-handler
-  [request metadata]
-  (cond
-    (authenticated? request)
-    (-> (ok)
-        (assoc :status 403))
-
-    :else
-    (bad-request {:message "unauthorized"})))
-
-
-
-
-(def auth-backend
-  (jws-backend {:unauthorized-handler unauthorized-handler
-                :secret secret :options {:alg :hs512}}))
-
-
-
-
 (def app
   (as-> handler $
     (wrap-authorization  $ auth-backend)
     (wrap-authentication $ auth-backend)
-    ;;    (wrap-params $)
-    ;;    (wrap-session $)
-    (wrap-restful-format $ {:formats [:transit-json]}
-                         )
-    (wrap-resource       $ "public")
-    ;; (wrap-content-type   $)
-    ;; (wrap-not-modified   $)
-    ))
+    (wrap-params         $)
+    (wrap-restful-format $ {:formats [:transit-json]})
+    (wrap-resource       $ "public")))
 
 
 
 (defn init []
   #_(db/init))
-
 
 
 (defn -main [& args]

@@ -1,11 +1,10 @@
 (ns experiments.index.events
-  (:require [re-frame.core :as rf :refer [reg-event-db path trim-v
-                                          dispatch reg-event-fx]]
-            [experiments.util :refer [info]]
+  (:require [re-frame.core :as rf :refer [reg-event-db path trim-v reg-event-fx]]
+            [experiments.util     :refer [info]]
             [experiments.ajax.events :as ajax-evt]))
 
 
-(def index-interceptors [(path ::index) trim-v])
+(def index-interceptors [(path :index) trim-v])
 
 
 (reg-event-db
@@ -17,19 +16,19 @@
 
 (reg-event-fx
  ::login
- (fn
-   [_ [_ {:keys [user pass]}]]
-   {:dispatch [::ajax-evt/request {:method    :post
-                                   :params    {:username user
-                                               :password pass}
-                                   :uri        "/login"
-                                   :on-success [::ajax-evt/set-token]}]}))
+ index-interceptors
+ (fn [_ [creds]]
+   {:dispatch
+    [::ajax-evt/request {:method     :post
+                         :params     creds
+                         :uri        "/login"
+                         :on-success [::ajax-evt/set-token]}]}))
 
 
 (reg-event-fx
  ::logout
- (fn
-   [{db :db} _]
+ index-interceptors
+ (fn [{db :db} _]
    {:db (dissoc db :authenticated?)
     :dispatch [::ajax-evt/remove-token]}))
 
@@ -37,7 +36,26 @@
 
 (reg-event-fx
  ::get-home-page
- (fn
-   [_ _]
+ index-interceptors
+ (fn [_ _]
    {:dispatch [::ajax-evt/request-auth {:uri "/home"}]}))
 
+
+
+
+(reg-event-fx
+ ::save-cover
+ (fn [_ [_ cover]]
+   {:dispatch
+    [::ajax-evt/request-auth {:method :post
+                              :uri "/save-cover"
+                              :params cover}]}))
+
+
+(reg-event-fx
+ ::get-top-covers
+ (fn [_ [_ page]]
+   {:dispatch
+    [::ajax-evt/request-auth {:uri "/get-top-covers"
+                              :params page
+                              :on-success [::initialize-covers]}]}))

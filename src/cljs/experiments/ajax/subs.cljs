@@ -3,7 +3,13 @@
 
 
 (reg-sub
+ ::ajax
+ (fn [db _]
+   (:ajax db)))
+
+(reg-sub
  ::token
+ :<- [::ajax]
  (fn [db _]
    (:token db)))
 

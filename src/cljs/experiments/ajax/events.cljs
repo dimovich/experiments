@@ -1,10 +1,13 @@
 (ns experiments.ajax.events
-  (:require [re-frame.core :as rf :refer [reg-event-db reg-event-fx subscribe]]
+  (:require [re-frame.core :as rf   :refer [reg-event-db reg-event-fx subscribe path trim-v]]
+            [ajax.core     :as ajax :refer [to-interceptor]]
             [day8.re-frame.http-fx]
-            [ajax.core :as ajax]
-            [experiments.util :refer [info]]
-            [ajax.core :as ajax :refer [to-interceptor]]
-            [experiments.ajax.subs :as sub]))
+            [experiments.ajax.subs :as sub]
+            [experiments.util :refer [info]]))
+
+
+
+(def ajax-interceptors [(path :ajax) trim-v])
 
 
 
@@ -21,10 +24,12 @@
 
 
 
+
+
 (reg-event-fx
  ::request
- (fn
-   [_ [_ m]]
+ ajax-interceptors
+ (fn [_ [m]]
    {:http-xhrio (-> {:method          :get
                      :on-success      [::good-response]
                      :on-failure      [::bad-response]
@@ -36,41 +41,45 @@
 
 (reg-event-fx
  ::request-auth
- (fn
-   [_ [_ m]]
-   {:dispatch [::request (-> {:interceptors [token-ajax-interceptor]}
-                             
-                             (merge m))]}))
+ ajax-interceptors
+ (fn [_ [m]]
+   {:dispatch
+    [::request (-> {:interceptors [token-ajax-interceptor]}
+                   (merge m))]}))
 
 
 (reg-event-db
-  ::set-token
-  (fn
-    [db [_ {:keys [token]}]]
-    (info "login success: " token)
-    (assoc db :token token)))
+ ::set-token
+ ajax-interceptors
+ (fn [db [{:keys [token]}]]
+   (info "login success: " token)
+   (assoc db :token token)))
 
 
 (reg-event-db
-  ::remove-token
-  (fn
-    [db _]
-    (info "logout success.")
-    (dissoc db :token)))
+ ::remove-token
+ ajax-interceptors
+ (fn [db _]
+   (info "logout success.")
+   (dissoc db :token)))
 
 
+
+;;fixme: we don't change the db, can we ignore the return of the fn?
 (reg-event-db
  ::good-response
+ ajax-interceptors
  (fn
-   [db [_ response]]
+   [db [response]]
    (info "ajax success: " response)
    db))
 
 
 (reg-event-db
  ::bad-response
- (fn
-   [db [_ response]]
+ ajax-interceptors
+ (fn [db [response]]
    (info "ajax error: " response)
    db))
+
 
