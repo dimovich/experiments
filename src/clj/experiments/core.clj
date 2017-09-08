@@ -46,24 +46,49 @@
 
 
 
+(def covers-sample {:cover1 {:some :idata}
+                    :cover2 {:some :odata}})
+
+
+;; why GET has string-key params?
+(defn get-covers [{{:keys [type size skip]} :params :as request}]
+  (info request)
+  (ok covers-sample))
+
+
 
 (defroutes handler
   (GET       "/"       [] (index-page))
-  (GET       "/home"   [] index)
+  (GET       "/get-covers" [] get-covers)
   (POST      "/login"  [] login)
-  (files     "/"       {:root "."})   ;; to serve static resources
-  (resources "/"       {:root "."})   ;; to serve anything else
-  (compojure.route/not-found "Page Not Found")) ;; page not found
+  (files     "/"       {:root "."})
+  (resources "/"       {:root "."})
+  (compojure.route/not-found "Page Not Found"))
+
+
+;; check docs
+(defn wrap-keywordize-get-params [handler]
+  (fn [req]
+    (let [req (handler req)]
+      (info "handler" req)
+      (if (= :get (:request-method req))
+        (-> req
+            (update-in [:params]
+                       #(reduce (fn [m1 [k v]]
+                                  (assoc m1 (keyword k) v)) {} %)))
+        req))))
 
 
 
+;; $ seems to be constant
 (def app
   (as-> handler $
     (wrap-authorization  $ auth-backend)
     (wrap-authentication $ auth-backend)
     (wrap-params         $)
     (wrap-restful-format $ {:formats [:transit-json]})
-    (wrap-resource       $ "public")))
+    (wrap-resource       $ "public")
+    (wrap-keywordize-get-params $)))
 
 
 

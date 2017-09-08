@@ -28,9 +28,14 @@
 (defn index []
   (r/with-let [_ (dispatch-sync [::evt/initialize])]
     [:div
+
      [:input {:type :button
-              :value "Get Page"
-              :on-click #(dispatch [::evt/get-home-page])}]
+              :value "Get Covers"
+              :on-click #(dispatch [::evt/get-covers {:type :top
+                                                      :size 10
+                                                      :skip 30}])}]
+
+     [:br] [:br]
      
      (if @(subscribe [::sub/authenticated?])
        [:input {:type :button

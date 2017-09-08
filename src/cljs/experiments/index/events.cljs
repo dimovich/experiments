@@ -25,6 +25,7 @@
                          :on-success [::ajax-evt/set-token]}]}))
 
 
+
 (reg-event-fx
  ::logout
  index-interceptors
@@ -34,15 +35,7 @@
 
 
 
-(reg-event-fx
- ::get-home-page
- index-interceptors
- (fn [_ _]
-   {:dispatch [::ajax-evt/request-auth {:uri "/home"}]}))
-
-
-
-
+;;editor
 (reg-event-fx
  ::save-cover
  (fn [_ [_ cover]]
@@ -52,10 +45,22 @@
                               :params cover}]}))
 
 
+
+;;index
 (reg-event-fx
- ::get-top-covers
- (fn [_ [_ page]]
+ ::get-covers
+ index-interceptors
+ (fn [_ [opts]]
    {:dispatch
-    [::ajax-evt/request-auth {:uri "/get-top-covers"
-                              :params page
-                              :on-success [::initialize-covers]}]}))
+    [::ajax-evt/request-auth {:uri "/get-covers"
+                              :params opts
+                              :on-success [::import-covers]}]}))
+
+
+
+(reg-event-db
+ ::import-covers
+ index-interceptors
+ (fn [db [covers]]
+   (assoc db :covers covers)))
+

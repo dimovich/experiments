@@ -17,7 +17,7 @@
 
 
 (def authdata
-  {:admin "secret"})
+  {:admin (hashers/derive "secret")})
 
 
 
@@ -26,7 +26,7 @@
 
   (let [valid? (some-> authdata
                        (get (keyword user))
-                       (= pass))]
+                       #(hashers/check pass %))]
     (if valid?
       (let [claims {:user (keyword user)
                     :exp  (time/plus (time/now) (time/seconds 3600))}
