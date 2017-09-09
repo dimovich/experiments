@@ -20,8 +20,8 @@
  (fn [_ [creds]]
    {:dispatch
     [::ajax-evt/request {:method     :post
-                         :params     creds
                          :uri        "/login"
+                         :params     creds
                          :on-success [::ajax-evt/set-token]}]}))
 
 
@@ -52,7 +52,8 @@
  index-interceptors
  (fn [_ [opts]]
    {:dispatch
-    [::ajax-evt/request-auth {:uri "/get-covers"
+    [::ajax-evt/request-auth {:method :post
+                              :uri "/get-covers"
                               :params opts
                               :on-success [::import-covers]}]}))
 
@@ -63,4 +64,3 @@
  index-interceptors
  (fn [db [covers]]
    (assoc db :covers covers)))
-

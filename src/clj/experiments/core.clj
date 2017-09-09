@@ -2,7 +2,7 @@
   (:require [ring.middleware.resource        :refer [wrap-resource]]
             [ring.middleware.content-type    :refer [wrap-content-type]]
             [ring.middleware.not-modified    :refer [wrap-not-modified]]
-            [ring.middleware.format          :refer [wrap-restful-format]]
+            [ring.middleware.format          :refer [wrap-restful-format] :as ring-format]
             [ring.util.response              :refer [response file-response redirect not-found content-type]]
             [ring.middleware.session         :refer [wrap-session]]
             [ring.middleware.params          :refer [wrap-params]]
@@ -38,8 +38,6 @@
 
 
 (defn index [request]
-  (info "index" request)
-  
   (if-not (authenticated? request)
     (throw-unauthorized)
     (ok {:message (str "hello " (:identity request))})))
@@ -50,45 +48,47 @@
                     :cover2 {:some :odata}})
 
 
-;; why GET has string-key params?
+;; why GET has string-key params? BECAUSE..., you need a special middleware...
+;; GET adds its params to the query-string
 (defn get-covers [{{:keys [type size skip]} :params :as request}]
-  (info request)
   (ok covers-sample))
 
 
 
 (defroutes handler
   (GET       "/"       [] (index-page))
-  (GET       "/get-covers" [] get-covers)
+  (POST      "/get-covers" [] get-covers)
   (POST      "/login"  [] login)
   (files     "/"       {:root "."})
   (resources "/"       {:root "."})
   (compojure.route/not-found "Page Not Found"))
 
 
-;; check docs
-(defn wrap-keywordize-get-params [handler]
-  (fn [req]
-    (let [req (handler req)]
-      (info "handler" req)
-      (if (= :get (:request-method req))
-        (-> req
-            (update-in [:params]
-                       #(reduce (fn [m1 [k v]]
-                                  (assoc m1 (keyword k) v)) {} %)))
-        req))))
+
+(defn wrap-info-request [handler]
+  (fn [request]
+    (info "request: " request)
+    (handler request)))
+
+
+(defn wrap-info-response [handler]
+  (fn [request]
+    (let [response (handler request)]
+      (info "response: " response)
+      response)))
 
 
 
-;; $ seems to be constant
 (def app
   (as-> handler $
+    ;;(wrap-info-request   $)
     (wrap-authorization  $ auth-backend)
     (wrap-authentication $ auth-backend)
-    (wrap-params         $)
     (wrap-restful-format $ {:formats [:transit-json]})
+    (wrap-params         $)
     (wrap-resource       $ "public")
-    (wrap-keywordize-get-params $)))
+    ;;(wrap-info-response  $)
+    ))
 
 
 

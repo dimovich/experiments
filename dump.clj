@@ -112,3 +112,21 @@
            :email "radyon@gmail.com"})
 
 
+
+
+
+
+
+
+;; convert keys of GET params to keywords
+(defn wrap-get-params-to-key [handler]
+  (fn [request]
+    (info "wrap-get-params-to-key: " request)
+    (-> (if (= :get (:request-method request))
+          (-> request
+              (update-in [:params]
+                         #(reduce (fn [m [k v]]
+                                    (assoc m (keyword k) v)) {} %)))
+          request)
+        
+        handler)))
