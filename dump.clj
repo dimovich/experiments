@@ -21,7 +21,7 @@
 
 (def db-state (atom {}))
 
-(def user-schema [{:db/ident :user/name
+(def user-schema [{:db/ident :user/username
                    :db/valueType :db.type/string
                    :db/cardinality :db.cardinality/one
                    :db/unique :db.unique/identity}
@@ -76,13 +76,13 @@
         <!!)))
 
 
-(defn get-user [name]
+(defn get-user [username]
   (let [db (current-db)
         conn (get-connection)]
     (->> {:query '[:find (pull ?e [*])
                    :in $ ?name
                    :where
-                   [?e :user/name ?name]]
+                   [?e :user/username ?name]]
           :args [db name]}
          (client/q conn)
          <!!
@@ -100,8 +100,8 @@
 
 (get-user "dimovich")
 
-(defn add-user [{:keys [name password email]}]
-  (-> [{:user/name name
+(defn add-user [{:keys [username password email]}]
+  (-> [{:user/username username
         :user/password password
         :user/email email}]
       (add-data)))
@@ -121,7 +121,6 @@
 ;; convert keys of GET params to keywords
 (defn wrap-get-params-to-key [handler]
   (fn [request]
-    (info "wrap-get-params-to-key: " request)
     (-> (if (= :get (:request-method request))
           (-> request
               (update-in [:params]
