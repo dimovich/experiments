@@ -6,6 +6,7 @@
 
 
 
+
 (defn login-form []
   (r/with-let [state (r/atom {:user "" :pass ""})] 
     [:form
@@ -22,6 +23,7 @@
      [:input {:type "button"
               :value "Submit"
               :on-click #(dispatch [::evt/login @state])}]]))
+
 
 
 

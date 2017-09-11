@@ -129,3 +129,23 @@
           request)
         
         handler)))
+
+
+
+
+
+
+;; build.clj
+(require '[cljs.build.api :as b])
+
+(b/build "src" {:output-dir "out" :asset-path "/out" :output-to "out/main.js" :main 'foo.core :npm-deps {:react-date-range "0.9.4" :react "15.6.1" :react-dom "15.6.1"} :install-deps true :optimizations :none :verbose true}) ```
+
+``` ;; foo/core.cljs
+(ns foo.core (:require react react-dom react-date-range))
+
+(enable-console-print!)
+
+(println "hi" react-date-range)
+
+
+;;java -cp cljs.jar:src clojure.main build.clj

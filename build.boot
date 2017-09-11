@@ -1,6 +1,10 @@
 (set-env!
  :source-paths    #{"src/cljs" "src/clj" "src/cljc"}
  :resource-paths  #{"resources" }
+ 
+ #_( :exclusions [org.bouncycastle/bcprov-jdk15on
+                  org.bouncycastle/bcpkix-jdk15on])
+ 
  :dependencies '[[org.clojure/clojure "1.9.0-alpha19"]
                  [org.clojure/clojurescript "1.9.908"]
 
@@ -26,7 +30,11 @@
                  [buddy/buddy-auth "2.1.0"]
                  [buddy/buddy-hashers "1.3.0"]
                  [buddy/buddy-sign "2.2.0"]
-                 [buddy/buddy-core "1.4.0"]
+                 [buddy/buddy-core "1.4.0" :exclusions [org.bouncycastle/bcprov-jdk15on
+                                                        org.bouncycastle/bcpkix-jdk15on]]
+
+                 [org.bouncycastle/bcprov-jdk15on "1.58" :scope "provided"]
+                 [org.bouncycastle/bcpkix-jdk15on "1.58" :scope "provided"]
 
                  [clj-time "0.14.0"]
                  
@@ -34,8 +42,12 @@
                  [org.clojure/core.async "0.3.443"]
                  [org.clojure/data.fressian "0.2.1"]
 
+
+                 ;;[cljsjs/react "15.6.1-2"]
+                 ;;[cljsjs/react-dom "15.6.1-2"]
+                 
                  [prismatic/dommy "1.1.0"]
-                 [reagent  "0.8.0-alpha1"]
+                 [reagent  "0.7.0" :exclusions [cljsjs/react cljsjs/react-dom]]
                  [re-frame "0.10.1"]
                  [day8.re-frame/http-fx "0.1.4"]
                  [cljs-ajax "0.7.2"]])
@@ -60,18 +72,27 @@
 
 (task-options!
  jar   {:main 'experiments.core :file "experiments.jar"}
- sift  {:include #{#"experiments\.jar" #"experiments\.js" #"assets"}}
+ sift  {:include #{#"experiments\.jar" #"experiments\.js" #"dist-jars" #"assets" }}
+ uber  {:exclude-scope ["provided"]
+        ;;:exclude [#".*bouncycastle.*"]
+        }
  aot {:namespace #{'experiments.core}}
  reload {:on-jsload 'experiments.core/reload}
  cljs  { ;;:ids #{"public/experiments"}
         :compiler-options {:output-to  "public/experiments.js"
                            :output-dir "public/out"
                            :asset-path "out"
-                           ;;:preloads   '[experiments.dev]
+                           :main 'experiments.core
                            :parallel-build true
+                           ;;:install-deps true
+                           #_(:npm-deps {:react "15.6.1" :react-dom "15.6.1"
+                                         :react-draggable "2.2.3" :re-resizable "3.0.0"})
                            :foreign-libs  [{:file        "src/js/jsutils.js"
                                             :provides    ["jsutils"]
-                                            :module-type :commonjs}]}}
+                                            :module-type :commonjs}
+                                           
+                                           {:file     "src/js/bundle.js"
+                                            :provides ["cljsjs.react" "cljsjs.react-dom"]}]}}
  ;;cljs-repl  {:ids #{"public/experiments"}}
  serve {:resource-root "target/public"
         :handler 'experiments.core/app
