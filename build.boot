@@ -24,17 +24,16 @@
                  [com.taoensso/timbre       "4.8.0"]
                  [javax.servlet/servlet-api "3.0-alpha-1"]
 
-                 
                  [ring-middleware-format "0.7.2"]
 
                  [buddy/buddy-auth "2.1.0"]
                  [buddy/buddy-hashers "1.3.0"]
                  [buddy/buddy-sign "2.2.0"]
-                 [buddy/buddy-core "1.4.0" :exclusions [org.bouncycastle/bcprov-jdk15on
-                                                        org.bouncycastle/bcpkix-jdk15on]]
+                 [buddy/buddy-core "1.4.0"  #_(:exclusions [org.bouncycastle/bcprov-jdk15on
+                                                            org.bouncycastle/bcpkix-jdk15on])]
 
-                 [org.bouncycastle/bcprov-jdk15on "1.58" :scope "provided"]
-                 [org.bouncycastle/bcpkix-jdk15on "1.58" :scope "provided"]
+                 ;;                 [org.bouncycastle/bcprov-jdk15on "1.58" :scope "test"]
+                 ;;                 [org.bouncycastle/bcpkix-jdk15on "1.58" :scope "test"]
 
                  [clj-time "0.14.0"]
                  
@@ -73,10 +72,10 @@
 (task-options!
  jar   {:main 'experiments.core :file "experiments.jar"}
  sift  {:include #{#"experiments\.jar" #"experiments\.js" #"dist-jars" #"assets" }}
- uber  {:exclude-scope ["provided"]
-        ;;:exclude [#".*bouncycastle.*"]
+ uber  {;;:exclude-scope ["provided"]
+        ;;:exclude [#".*bouncycastle.*" #".*\.DSA$" #".*\.RSA$" #".*\.SF$"]
         }
- aot {:namespace #{'experiments.core}}
+ aot   {:namespace #{'experiments.core}}
  reload {:on-jsload 'experiments.core/reload}
  cljs  { ;;:ids #{"public/experiments"}
         :compiler-options {:output-to  "public/experiments.js"

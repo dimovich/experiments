@@ -2,6 +2,8 @@
   (:require [reagent.core :as r]))
 
 
+(enable-console-print!)
+
 (defn info [& args]
   (apply println args))
 

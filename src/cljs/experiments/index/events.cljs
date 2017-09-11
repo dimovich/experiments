@@ -1,6 +1,7 @@
 (ns experiments.index.events
   (:require [re-frame.core :as rf :refer [reg-event-db path trim-v reg-event-fx]]
-            [experiments.util     :refer [info]]
+            ;;[experiments.util     :refer [info]]
+            [taoensso.timbre :refer-macros [info]]
             [experiments.ajax.events :as ajax-evt]))
 
 

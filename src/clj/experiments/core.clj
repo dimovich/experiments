@@ -81,13 +81,13 @@
 
 (def app
   (as-> handler $
-    ;;(wrap-info-request   $)
+    (wrap-info-request   $)
     (wrap-authorization  $ auth-backend)
     (wrap-authentication $ auth-backend)
     (wrap-restful-format $ {:formats [:transit-json]})
     (wrap-params         $)
     (wrap-resource       $ "public")
-    ;;(wrap-info-response  $)
+    (wrap-info-response  $)
     ))
 
 

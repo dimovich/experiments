@@ -3,7 +3,8 @@
             [ajax.core     :as ajax :refer [to-interceptor]]
             [day8.re-frame.http-fx]
             [experiments.ajax.subs :as sub]
-            [experiments.util :refer [info]]))
+            ;;[experiments.util :refer [info]]
+            [taoensso.timbre :refer-macros [info]]))
 
 
 

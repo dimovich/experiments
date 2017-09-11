@@ -1,6 +1,6 @@
 (ns experiments.auth
-  (:require ;;[buddy.core.nonce  :as nonce]
-            ;;[buddy.core.codecs :as codecs]
+  (:require [buddy.core.nonce  :as nonce]
+            [buddy.core.codecs :as codecs]
             [buddy.sign.jwt :as jwt]
             [buddy.hashers  :as hashers]
             [buddy.auth     :refer [authenticated? throw-unauthorized]]
@@ -12,8 +12,8 @@
 
 
 
-(def secret "mysecret" #_(-> (nonce/random-bytes 32)
-                             (codecs/bytes->hex)))
+(def secret (-> (nonce/random-bytes 32)
+                (codecs/bytes->hex)))
 
 
 (def authdata
@@ -22,7 +22,6 @@
 
 
 (defn login [{{:keys [user pass]} :params :as request}]
-  (info "login" request)
 
   (let [valid? (some-> authdata
                        (get (keyword user))
